@@ -81,7 +81,7 @@
             height: 250px;
         }
 
-        #output, #word-container {
+        #output, #word-container, #current-word {
             background-color: var(--secondary-color);
             color: white;
             padding: 10px;
@@ -107,6 +107,18 @@
             transform: scale(1.2);
             color: var(--secondary-color);
         }
+
+        #saved-letters {
+            display: flex;
+            justify-content: center;
+            margin: 10px 0;
+            font-size: 1.5em;
+        }
+
+        #saved-letters .saved-letter {
+            margin: 0 5px;
+            color: var(--primary-color);
+        }
     </style>
 </head>
 <body>
@@ -115,7 +127,8 @@
         
         <div class="button-group">
             <button type="button" onclick="init()">Start Camera</button>
-            <button type="button" onclick="addWord()">Save Word</button>
+            <button type="button" onclick="saveLetter()">Save Letter</button>
+            <button type="button" onclick="saveWord()">Save Word</button>
             <button type="button" onclick="reset()">Reset</button>
         </div>
 
@@ -125,8 +138,11 @@
             <div id="current-letter" class="letter"></div>
         </div>
 
+        <div id="saved-letters"></div>
+
         <div id="output">Current Letter: </div>
-        <div id="word-container">Words: </div>
+        <div id="current-word">Current Word: </div>
+        <div id="word-container">Saved Words: </div>
     </div>
 
     <script type="text/javascript">
@@ -134,8 +150,8 @@
     
         let model, webcam, maxPredictions;
         let currentLetter = ""; 
-        let letters = []; 
-        let words = []; 
+        let currentWord = []; 
+        let savedWords = []; 
         let lastPredictionTime = 0; 
         const predictionInterval = 1000; 
         
@@ -155,7 +171,6 @@
 
             document.getElementById("webcam-container").appendChild(webcam.canvas);
             speak("Camera started. Show me letters!");
-        
         }
     
         async function loop() {
@@ -186,7 +201,6 @@
     
             if (topPrediction.className !== currentLetter) {
                 currentLetter = topPrediction.className;
-                letters.push(currentLetter);
                 document.getElementById("output").innerText = `Current Letter: ${currentLetter}`;
                 document.getElementById("current-letter").innerText = currentLetter;
                 document.getElementById("current-letter").classList.add('active');
@@ -199,28 +213,50 @@
             }
         }
     
-        function addWord() {
-            if (letters.length > 0) {
-                const word = letters.join("");
-                words.push(word);
-                letters = [];
+        function saveLetter() {
+            if (currentLetter) {
+                currentWord.push(currentLetter);
+                updateSavedLetters();
+                speak(`Saved letter ${currentLetter}`);
+            }
+        }
+    
+        function saveWord() {
+            if (currentWord.length > 0) {
+                const word = currentWord.join("");
+                savedWords.push(word);
+                currentWord = [];
                 updateWordContainer();
-                speak(word);
+                updateSavedLetters();
+                speak(`Saved word ${word}`);
             }
         }
     
         function reset() {
             currentLetter = "";
-            letters = [];
-            words = [];
+            currentWord = [];
+            savedWords = [];
             document.getElementById("output").innerText = "Current Letter: ";
             document.getElementById("current-letter").innerText = "";
+            document.getElementById("current-word").innerText = "Current Word: ";
+            updateSavedLetters();
             updateWordContainer();
             speak("Reset");
         }
     
+        function updateSavedLetters() {
+            const savedLettersContainer = document.getElementById("saved-letters");
+            const currentWordContainer = document.getElementById("current-word");
+            
+            savedLettersContainer.innerHTML = currentWord.map(letter => 
+                `<span class="saved-letter">${letter}</span>`
+            ).join("");
+            
+            currentWordContainer.innerText = `Current Word: ${currentWord.join("")}`;
+        }
+    
         function updateWordContainer() {
-            document.getElementById("word-container").innerText = `Words: ${words.join(", ")}`;
+            document.getElementById("word-container").innerText = `Saved Words: ${savedWords.join(", ")}`;
         }
     </script>
 </body>
